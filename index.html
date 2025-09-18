@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Guimarães Equipamentos</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #ffcc00, #333);
+      font-family: Arial, sans-serif;
+    }
+
+    .form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: white;
+      width: 18em;
+      height: auto;
+      padding: 20px;
+      border: 2px solid #000;
+      border-bottom-left-radius: 1.5em;
+      border-top-right-radius: 1.5em;
+      box-shadow:
+        -10px 0px 0px #ffcc00,
+        -10px 5px 5px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+
+    /* Topo */
+    #login-area {
+      width: 100%;
+      text-align: center;
+      color: #000;
+      margin-bottom: 15px;
+    }
+
+    #login-area img {
+      width: 60px;
+      margin-bottom: 8px;
+    }
+
+    #login-area h1 {
+      margin: 0;
+      font-size: 1.3em;
+      font-weight: bold;
+    }
+
+    #login-area p {
+      font-size: 0.9em;
+      font-weight: 500;
+      color: #333;
+      margin: 5px 0 0;
+    }
+
+    /* Inputs */
+    .form input,
+    .form select {
+      width: 85%;
+      border: 2px solid #000;
+      border-radius: 0.5em;
+      height: 2.5em;
+      margin: 10px 0;
+      padding-left: 1em;
+      font-size: 0.9em;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    .form input:focus,
+    .form select:focus {
+      border: 2px solid #ffcc00;
+      box-shadow: 0px 0px 5px #ffcc00;
+    }
+
+    /* Botão */
+    #footer-area button {
+      width: 85%;
+      border: 2px solid #000;
+      border-radius: 0.5em;
+      height: 2.5em;
+      font-size: 1em;
+      font-weight: bold;
+      background-color: #000;
+      color: #ffcc00;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #footer-area button:hover {
+      background-color: #ffcc00;
+      color: #000;
+    }
+
+    /* Links */
+    #password-area a {
+      margin-top: 5px;
+      font-size: 0.8em;
+      font-weight: bold;
+      color: #000;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    #password-area a:hover {
+      text-decoration: underline;
+    }
+
+    #footer-area p,
+    #footer-area a {
+      font-size: 0.8em;
+      color: #333;
+      margin: 5px 0;
+      text-decoration: none;
+    }
+
+    /* Mensagem de erro */
+    .error {
+      color: red;
+      font-size: 0.8em;
+      margin-top: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <form class="form" id="loginForm">
+    <div id="login-area">
+      <img src="https://cdn-icons-png.flaticon.com/512/2910/2910768.png" alt="Betoneira">
+      <h1>Guimarães Equipamentos</h1>
+      <p>Plataforma de Gestão</p>
+    </div>
+
+    <input id="email" placeholder="Email" type="text" required>
+    <input id="senha" placeholder="Senha" type="password" required>
+
+    <select id="perfil" required>
+      <option value="" disabled selected>Selecione seu perfil</option>
+      <option value="admin">Gerente / Admin</option>
+      <option value="subordinado">Encarregado / Subordinado</option>
+    </select>
+
+    <div id="password-area">
+      <a href="#">Esqueceu a senha?</a>
+    </div>
+
+    <div id="footer-area">
+      <button type="submit">Entrar</button>
+      <p>Não tem uma conta?</p>
+      <a href="#">Solicitar acesso</a>
+    </div>
+
+    <p class="error" id="errorMsg">Credenciais inválidas. Tente novamente.</p>
+  </form>
+
+  <script>
+    // Exemplo de usuários fictícios
+    const usuarios = {
+      admin: { email: "admin@guimaraes.com", senha: "1234" },
+      subordinado: { email: "user@guimaraes.com", senha: "1234" }
+    };
+
+    const form = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+      const perfil = document.getElementById("perfil").value;
+
+      if (
+        usuarios[perfil] &&
+        usuarios[perfil].email === email &&
+        usuarios[perfil].senha === senha
+      ) {
+        // Redireciona de acordo com o perfil
+        if (perfil === "admin") {
+          window.location.href = "paineladm.html";
+        } else {
+          window.location.href = "painel.html";
+        }
+      } else {
+        errorMsg.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>
