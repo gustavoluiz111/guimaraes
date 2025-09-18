@@ -4,103 +4,122 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel Admin - Guimarães Equipamentos</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
-  body { margin:0; font-family:Arial,sans-serif; background:#f5f5f5; color:#333; transition:0.4s; }
-  body.dark { background:#1a1a1a; color:#f5f5f5; }
-  .menu-btn { position:fixed; top:15px; left:15px; width:35px; height:30px; cursor:pointer; z-index:1001; display:flex; flex-direction:column; justify-content:space-between; }
-  .menu-btn div { width:100%; height:5px; background:#ffcc00; transition:0.4s; }
-  .menu-btn.open div:nth-child(1){ transform:rotate(45deg) translate(7px,7px);}
-  .menu-btn.open div:nth-child(2){ opacity:0;}
-  .menu-btn.open div:nth-child(3){ transform:rotate(-45deg) translate(7px,-7px);}
-  .side-menu { position:fixed; left:-250px; top:0; width:250px; height:100%; background:#333; color:#ffcc00; padding-top:60px; transition:0.4s; z-index:1000; }
-  .side-menu a { display:block; color:#ffcc00; padding:15px 20px; text-decoration:none; font-weight:bold; }
-  .side-menu a:hover { background:#ffcc00; color:#333; }
-  .main { padding:20px; margin-left:0; transition:0.4s; }
-  h1 { margin-top:0; }
-  .card-container { display:flex; flex-wrap:wrap; gap:20px; }
-  .card { width:180px; padding:15px; border-radius:10px; background:#fff; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.2); transition:0.3s; }
-  .card.dark { background:#333; color:#ffcc00; }
-  .card img.betoneira { width:100px; height:80px; margin-top:10px; object-fit:contain; }
-  .status { font-weight:bold; padding:5px; border-radius:5px; color:#fff; margin-top:5px; }
-  .disponivel { background:green; } .uso { background:orange; } .manutencao { background:red; }
-  .switch { font-size:17px; position:fixed; top:15px; right:15px; display:inline-block; width:4em; height:2.2em; border-radius:30px; box-shadow:0 0 10px rgba(0,0,0,0.1); overflow:hidden; }
-  .switch input { opacity:0;width:0;height:0; }
-  .slider { position:absolute; cursor:pointer; top:0;left:0;right:0;bottom:0; background:#2a2a2a; transition:0.4s; border-radius:30px; overflow:hidden; }
-  .slider:before { position:absolute; content:""; height:1.2em; width:1.2em; border-radius:20px; left:0.5em; bottom:0.5em; transition:0.4s; box-shadow: inset 8px -4px 0 #fff; }
-  .switch input:checked + .slider { background:#00a6ff; }
-  .switch input:checked + .slider:before { transform:translateX(1.8em); box-shadow: inset 15px -4px 0 15px #ffcf48; }
-  .card.selecionado { border:2px solid #00a6ff; }
-  textarea { width:100%; height:80px; margin-top:5px; }
-  input[type=file] { margin-top:5px; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; }
-  table, th, td { border:1px solid #ccc; }
-  th, td { padding:8px; text-align:center; }
-  #legend { background:#fff; padding:10px; border-radius:5px; box-shadow:0 0 5px rgba(0,0,0,0.3); position:absolute; bottom:10px; left:10px; font-size:14px; }
-  #legend div { margin-bottom:4px; display:flex; align-items:center; gap:5px; }
-  .legend-color { width:15px; height:15px; display:inline-block; }
+  body { margin:0; font-family:Arial,sans-serif; background-color:#f5f5f5; color:#333; transition:0.4s;}
+  body.dark {background-color:#1a1a1a; color:#f5f5f5;}
+
+  /* Menu Hamburguer */
+  .menu-btn {position:fixed; top:15px; left:15px; width:35px; height:30px; cursor:pointer; z-index:1001;}
+  .menu-btn div {width:100%; height:5px; background-color:#ffcc00; margin:6px 0; transition:0.4s;}
+
+  .menu-btn.open div:nth-child(1){transform:rotate(45deg) translate(6px,6px);}
+  .menu-btn.open div:nth-child(2){opacity:0;}
+  .menu-btn.open div:nth-child(3){transform:rotate(-45deg) translate(6px,-6px);}
+
+  /* Menu lateral */
+  .side-menu {position:fixed; left:-250px; top:0; width:250px; height:100%; background-color:#333; color:#ffcc00; padding-top:60px; transition:0.4s; z-index:1000;}
+  .side-menu a {display:block; color:#ffcc00; padding:15px 20px; text-decoration:none; font-weight:bold;}
+  .side-menu a:hover {background-color:#ffcc00; color:#333;}
+
+  /* Conteúdo principal */
+  .main {padding:20px; margin-left:0; transition:0.4s;}
+  h1{margin-top:0;}
+
+  /* Cards monitoramento */
+  .card-container {display:flex; flex-wrap:wrap; gap:20px;}
+  .card {width:180px; padding:15px; border-radius:10px; background-color:#fff; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.2); transition:0.3s;}
+  .card.dark {background-color:#333; color:#ffcc00;}
+  .card img {width:100%; height:100px; object-fit:cover; border-radius:5px;}
+
+  .status {font-weight:bold; padding:5px; border-radius:5px; color:#fff;}
+  .disponivel {background-color:green;}
+  .uso {background-color:orange;}
+  .manutencao {background-color:red;}
+
+  /* Botão de tema */
+  .switch {font-size:17px; position:fixed; top:15px; right:15px; display:inline-block; width:4em; height:2.2em; border-radius:30px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+  .switch input {opacity:0; width:0; height:0;}
+  .slider {position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#2a2a2a; transition:0.4s; border-radius:30px; overflow:hidden;}
+  .slider:before {position:absolute; content:""; height:1.2em; width:1.2em; border-radius:20px; left:0.5em; bottom:0.5em; transition:0.4s; box-shadow:inset 8px -4px 0 #fff;}
+  .switch input:checked + .slider {background-color:#00a6ff;}
+  .switch input:checked + .slider:before {transform:translateX(1.8em); box-shadow: inset 15px -4px 0px 15px #ffcf48;}
+
+  /* Mapa */
+  #map {height:400px; width:100%; margin-top:20px; border-radius:10px;}
+  .legend {background:#fff; padding:10px; border-radius:5px; box-shadow:0 2px 4px rgba(0,0,0,0.3); margin-top:10px;}
 </style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
 
-<div class="menu-btn" onclick="toggleMenu()"><div></div><div></div><div></div></div>
-<label class="switch"><input id="checkbox" type="checkbox"><span class="slider"></span></label>
+<!-- Botão Hamburguer -->
+<div class="menu-btn" onclick="toggleMenu(this)">
+  <div></div><div></div><div></div>
+</div>
+
+<!-- Botão Tema -->
+<label class="switch">
+  <input id="checkbox" type="checkbox">
+  <span class="slider"></span>
+</label>
+
+<!-- Menu Lateral -->
 <div class="side-menu" id="sideMenu">
   <a href="#" onclick="showSection('monitoramento')">Monitoramento</a>
-  <a href="#" onclick="showSection('atualizacao')">Atualização do Estado</a>
+  <a href="#" onclick="showSection('atualizacao')">Atualização</a>
   <a href="#" onclick="showSection('contratos')">Contratos</a>
   <a href="#" onclick="showSection('chat')">Chat Global</a>
   <a href="#" onclick="showSection('relatorios')">Relatórios</a>
-  <a href="index.html">Sair</a>
 </div>
 
+<!-- Conteúdo -->
 <div class="main" id="mainContent">
 
+  <!-- Monitoramento -->
   <div id="monitoramento">
     <h1>Monitoramento das Betoneiras</h1>
     <div class="card-container" id="betoneiras"></div>
-    <h2>Localização das Betoneiras</h2>
-    <div id="map" style="height:400px; width:100%; border:1px solid #ccc;"></div>
-    <div id="legend">
-      <div><span class="legend-color" style="background:green;"></span>Disponível</div>
-      <div><span class="legend-color" style="background:orange;"></span>Em Uso</div>
-      <div><span class="legend-color" style="background:red;"></span>Em Manutenção</div>
-      <div style="margin-top:5px;">Sistema de rastreamento sugerido: GPS + GSM + App Web</div>
+    <div id="map"></div>
+    <div class="legend">
+      <b>Legenda do Rastreamento:</b><br>
+      <span style="color:green">● Disponível</span><br>
+      <span style="color:orange">● Em Uso</span><br>
+      <span style="color:red">● Manutenção</span><br>
+      <small>Exemplo de sistemas: GPS, IoT Tracker, RFID.</small>
     </div>
   </div>
 
+  <!-- Atualização -->
   <div id="atualizacao" style="display:none;">
     <h1>Atualização do Estado Físico</h1>
-    <p>Selecione os problemas da betoneira:</p>
+    <p>Selecione os problemas:</p>
     <div id="problemas" class="card-container"></div>
-    <p>Outro:</p>
-    <textarea id="outroProblema" placeholder="Descreva outro problema..."></textarea>
-    <input type="file" id="fotoProblema" accept="image/*">
-    <br>
+    <input type="text" id="outroProblema" placeholder="Outro problema...">
+    <br><br>
     <button onclick="salvarAtualizacao()">Enviar</button>
   </div>
 
+  <!-- Contratos -->
   <div id="contratos" style="display:none;">
     <h1>Contratos Digitais</h1>
-    <p>Exemplo de Termo de Aceite:</p>
-    <textarea>Eu, LOCATÁRIO, declaro que recebi o equipamento em bom estado...</textarea>
-    <br>
-    <button onclick="alert('Assinatura registrada!')">Assinar Digitalmente</button>
+    <textarea style="width:100%;height:120px;">Eu, LOCATÁRIO, declaro que recebi o equipamento em bom estado...</textarea>
+    <br><button onclick="alert('Assinatura registrada!')">Assinar Digitalmente</button>
   </div>
 
+  <!-- Chat -->
   <div id="chat" style="display:none;">
     <h1>Chat Global</h1>
-    <div id="chatBox" style="border:1px solid #ccc; height:200px; overflow-y:auto; padding:10px; background:#fff;"></div>
+    <div id="chatBox" style="border:1px solid #ccc; height:200px; overflow-y:auto; padding:10px; background-color:#fff;"></div>
     <input type="text" id="mensagem" placeholder="Digite sua mensagem..." style="width:80%;">
     <button onclick="enviarMensagem()">Enviar</button>
   </div>
 
+  <!-- Relatórios -->
   <div id="relatorios" style="display:none;">
     <h1>Relatórios</h1>
-    <table>
-      <thead>
-        <tr><th>Betoneira</th><th>Uso (dias)</th><th>Danos</th><th>Custo Manutenção</th></tr>
-      </thead>
+    <table border="1" style="width:100%; border-collapse:collapse;">
+      <thead><tr><th>Betoneira</th><th>Uso(dias)</th><th>Danos</th><th>Custo</th></tr></thead>
       <tbody id="relatorioBody"></tbody>
     </table>
   </div>
@@ -109,74 +128,89 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  const sideMenu=document.getElementById("sideMenu"), main=document.getElementById("mainContent"), menuBtn=document.querySelector('.menu-btn');
-  let open=false;
-  function toggleMenu(){ menuBtn.classList.toggle('open'); if(!open){ sideMenu.style.left="0"; main.style.marginLeft="250px"; open=true;} else{ sideMenu.style.left="-250px"; main.style.marginLeft="0"; open=false;} }
+  // Menu lateral
+  const sideMenu = document.getElementById("sideMenu");
+  const main = document.getElementById("mainContent");
+  let open = false;
+  function toggleMenu(btn){
+    btn.classList.toggle("open");
+    if(!open){ sideMenu.style.left="0"; main.style.marginLeft="250px"; open=true; } 
+    else{ sideMenu.style.left="-250px"; main.style.marginLeft="0"; open=false; }
+  }
 
   function showSection(sec){
     ['monitoramento','atualizacao','contratos','chat','relatorios'].forEach(s=>document.getElementById(s).style.display='none');
     document.getElementById(sec).style.display='block';
   }
 
-  const betoneiras=[
-    {id:'01', status:'Disponível', img:'https://cdn-icons-png.flaticon.com/512/154/154898.png', lat:-8.05, lng:-34.9},
-    {id:'02', status:'Em Uso', img:'https://cdn-icons-png.flaticon.com/512/154/154898.png', lat:-8.06, lng:-34.91},
-    {id:'03', status:'Em Manutenção', img:'https://cdn-icons-png.flaticon.com/512/154/154898.png', lat:-8.07, lng:-34.92}
+  // Betoneiras fictícias
+  const betoneiras = [
+    {id:'01', status:'Disponível', img:'https://i.imgur.com/Tg7H1iN.jpg', lat:-8.06, lng:-34.88},
+    {id:'02', status:'Em Uso', img:'https://i.imgur.com/wW8f6kU.jpg', lat:-8.07, lng:-34.87},
+    {id:'03', status:'Em Manutenção', img:'https://i.imgur.com/1iQ5ZPl.jpg', lat:-8.05, lng:-34.86}
   ];
-  const problemasLista=['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
 
-  const betoneirasDiv=document.getElementById('betoneiras');
+  // Gerar cards
+  const betoneirasDiv = document.getElementById('betoneiras');
   betoneiras.forEach(b=>{
-    const card=document.createElement('div'); card.className='card';
-    let statusClass=b.status==='Disponível'?'disponivel':b.status==='Em Uso'?'uso':'manutencao';
-    card.innerHTML=`<h3>Betoneira ${b.id}</h3><div class="status ${statusClass}">${b.status}</div><img class="betoneira" src="${b.img}" alt="Betoneira ${b.id}">`;
+    const card = document.createElement('div'); card.className='card';
+    let statusClass = b.status==='Disponível'?'disponivel':b.status==='Em Uso'?'uso':'manutencao';
+    card.innerHTML=`<img src="${b.img}"><h3>Betoneira ${b.id}</h3><div class="status ${statusClass}">${b.status}</div>`;
     betoneirasDiv.appendChild(card);
   });
 
-  const map=L.map('map').setView([-8.055,-34.91],14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-  betoneiras.forEach(b=>{ 
-    L.marker([b.lat,b.lng], {icon:L.icon({iconUrl:b.img, iconSize:[40,40], iconAnchor:[20,40]})})
-     .addTo(map)
-     .bindPopup(`<b>Betoneira ${b.id}</b><br>Status: ${b.status}`); 
-  });
-
-  const problemasDiv=document.getElementById('problemas');
+  // Atualização
+  const problemasLista = ['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
+  const problemasDiv = document.getElementById('problemas');
   problemasLista.forEach(p=>{
     const card=document.createElement('div'); card.className='card'; card.style.cursor='pointer';
-    card.onclick=()=>card.classList.toggle('selecionado'); card.innerText=p;
-    problemasDiv.appendChild(card);
+    card.onclick=()=>card.classList.toggle('selecionado'); card.innerText=p; problemasDiv.appendChild(card);
   });
   function salvarAtualizacao(){
     const selecionados=[...document.querySelectorAll('#problemas .selecionado')].map(c=>c.innerText);
     const outro=document.getElementById('outroProblema').value.trim();
-    alert('Problemas registrados: '+(selecionados.length?selecionados.join(', '):'Nenhum')+(outro?'; Outro: '+outro:''));
-    showSection('chat');
+    if(outro) selecionados.push(outro);
+    alert('Problemas registrados: '+(selecionados.length?selecionados.join(', '):'Nenhum'));
+    showSection('contratos');
   }
 
-  const chatBox=document.getElementById('chatBox');
+  // Chat
+  const chatBox = document.getElementById('chatBox');
   function enviarMensagem(){
-    const msg=document.getElementById('mensagem').value; if(msg.trim()==='') return;
-    const p=document.createElement('p'); p.innerHTML='<b>Você:</b> '+msg; chatBox.appendChild(p);
-    document.getElementById('mensagem').value=''; chatBox.scrollTop=chatBox.scrollHeight;
+    const msg=document.getElementById('mensagem').value;
+    if(msg.trim()==='') return;
+    const p=document.createElement('p'); p.innerHTML='<b>Você:</b> '+msg;
+    chatBox.appendChild(p); document.getElementById('mensagem').value=''; chatBox.scrollTop=chatBox.scrollHeight;
   }
 
-  const relBody=document.getElementById('relatorioBody');
-  const relatorioFicticio=[
+  // Relatórios
+  const relBody = document.getElementById('relatorioBody');
+  const relatorioFicticio = [
     {id:'01', uso:10, danos:2, custo:'R$ 120,00'},
     {id:'02', uso:7, danos:0, custo:'R$ 0,00'},
     {id:'03', uso:15, danos:3, custo:'R$ 450,00'}
   ];
   relatorioFicticio.forEach(r=>{
-    const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.id}</td><td>${r.uso}</td><td>${r.danos}</td><td>${r.custo}</td>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.id}</td><td>${r.uso}</td><td>${r.danos}</td><td>${r.custo}</td>`;
     relBody.appendChild(tr);
   });
 
+  // Tema
   const checkbox=document.getElementById('checkbox');
-  checkbox.addEventListener('change',()=>{
-    document.body.classList.toggle('dark',checkbox.checked);
+  checkbox.addEventListener('change',()=>{document.body.classList.toggle('dark',checkbox.checked);
     document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark',checkbox.checked));
   });
+
+  // Mapa rastreamento
+  const map = L.map('map').setView([-8.06, -34.88],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  betoneiras.forEach(b=>{
+    let color = b.status==='Disponível'?'green':b.status==='Em Uso'?'orange':'red';
+    L.marker([b.lat,b.lng],{title:'Betoneira '+b.id, icon:L.icon({iconUrl:b.img,iconSize:[40,40]})}).addTo(map)
+    .bindPopup(`<b>Betoneira ${b.id}</b><br>Status: ${b.status}`);
+  });
 </script>
+
 </body>
 </html>
