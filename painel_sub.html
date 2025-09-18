@@ -21,7 +21,7 @@
   .card-container { display:flex; flex-wrap:wrap; gap:20px; }
   .card { width:180px; padding:15px; border-radius:10px; background:#fff; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.2); transition:0.3s; }
   .card.dark { background:#333; color:#ffcc00; }
-  .card img.betoneira { width:100px; height:80px; margin-top:10px; }
+  .card img.betoneira { width:100px; height:80px; margin-top:10px; object-fit:contain; }
   .status { font-weight:bold; padding:5px; border-radius:5px; color:#fff; margin-top:5px; }
   .disponivel { background:green; } .uso { background:orange; } .manutencao { background:red; }
   .switch { font-size:17px; position:fixed; top:15px; right:15px; display:inline-block; width:4em; height:2.2em; border-radius:30px; box-shadow:0 0 10px rgba(0,0,0,0.1); overflow:hidden; }
@@ -33,30 +33,43 @@
   .card.selecionado { border:2px solid #00a6ff; }
   textarea { width:100%; height:80px; margin-top:5px; }
   input[type=file] { margin-top:5px; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  table, th, td { border:1px solid #ccc; }
+  th, td { padding:8px; text-align:center; }
+  #legend { background:#fff; padding:10px; border-radius:5px; box-shadow:0 0 5px rgba(0,0,0,0.3); position:absolute; bottom:10px; left:10px; font-size:14px; }
+  #legend div { margin-bottom:4px; display:flex; align-items:center; gap:5px; }
+  .legend-color { width:15px; height:15px; display:inline-block; }
 </style>
 </head>
 <body>
 
-<!-- Menu -->
 <div class="menu-btn" onclick="toggleMenu()"><div></div><div></div><div></div></div>
 <label class="switch"><input id="checkbox" type="checkbox"><span class="slider"></span></label>
+
 <div class="side-menu" id="sideMenu">
   <a href="#" onclick="showSection('monitoramento')">Monitoramento</a>
   <a href="#" onclick="showSection('atualizacao')">Atualização do Estado</a>
+  <a href="#" onclick="showSection('contratos')">Contratos</a>
   <a href="#" onclick="showSection('chat')">Chat Global</a>
+  <a href="#" onclick="showSection('relatorios')">Relatórios</a>
   <a href="index.html">Sair</a>
 </div>
 
 <div class="main" id="mainContent">
-  <!-- Monitoramento -->
+
   <div id="monitoramento">
     <h1>Monitoramento das Betoneiras</h1>
     <div class="card-container" id="betoneiras"></div>
     <h2>Localização das Betoneiras</h2>
     <div id="map" style="height:400px; width:100%; border:1px solid #ccc;"></div>
+    <div id="legend">
+      <div><span class="legend-color" style="background:green;"></span>Disponível</div>
+      <div><span class="legend-color" style="background:orange;"></span>Em Uso</div>
+      <div><span class="legend-color" style="background:red;"></span>Em Manutenção</div>
+      <div style="margin-top:5px;">Sistema de rastreamento sugerido: GPS + GSM + App Web</div>
+    </div>
   </div>
 
-  <!-- Atualização -->
   <div id="atualizacao" style="display:none;">
     <h1>Atualização do Estado Físico</h1>
     <p>Selecione os problemas da betoneira:</p>
@@ -68,37 +81,51 @@
     <button onclick="salvarAtualizacao()">Enviar</button>
   </div>
 
-  <!-- Chat -->
+  <div id="contratos" style="display:none;">
+    <h1>Contratos Digitais</h1>
+    <p>Exemplo de Termo de Aceite:</p>
+    <textarea>Eu, SUBORDINADO, declaro que recebi o equipamento em bom estado...</textarea>
+    <br>
+    <button onclick="alert('Assinatura registrada!')">Assinar Digitalmente</button>
+  </div>
+
   <div id="chat" style="display:none;">
     <h1>Chat Global</h1>
     <div id="chatBox" style="border:1px solid #ccc; height:200px; overflow-y:auto; padding:10px; background:#fff;"></div>
     <input type="text" id="mensagem" placeholder="Digite sua mensagem..." style="width:80%;">
     <button onclick="enviarMensagem()">Enviar</button>
   </div>
+
+  <div id="relatorios" style="display:none;">
+    <h1>Relatórios</h1>
+    <table>
+      <thead>
+        <tr><th>Betoneira</th><th>Uso (dias)</th><th>Danos</th><th>Custo Manutenção</th></tr>
+      </thead>
+      <tbody id="relatorioBody"></tbody>
+    </table>
+  </div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  // REMOVIDO: autenticação simulada
-  // if(!sessionStorage.getItem('usuarioLogado')) { alert('Você precisa estar logado!'); window.location.href='index.html'; }
-
   const sideMenu=document.getElementById("sideMenu"), main=document.getElementById("mainContent"), menuBtn=document.querySelector('.menu-btn');
   let open=false;
   function toggleMenu(){ menuBtn.classList.toggle('open'); if(!open){ sideMenu.style.left="0"; main.style.marginLeft="250px"; open=true;} else{ sideMenu.style.left="-250px"; main.style.marginLeft="0"; open=false;} }
 
   function showSection(sec){
-    ['monitoramento','atualizacao','chat'].forEach(s=>document.getElementById(s).style.display='none');
+    ['monitoramento','atualizacao','contratos','chat','relatorios'].forEach(s=>document.getElementById(s).style.display='none');
     document.getElementById(sec).style.display='block';
   }
 
   const betoneiras=[
-    {id:'01', status:'Disponível', img:'https://via.placeholder.com/100?text=B01', lat:-8.05, lng:-34.9},
-    {id:'02', status:'Em Uso', img:'https://via.placeholder.com/100?text=B02', lat:-8.06, lng:-34.91},
-    {id:'03', status:'Em Manutenção', img:'https://via.placeholder.com/100?text=B03', lat:-8.07, lng:-34.92}
+    {id:'01', status:'Disponível', img:'https://cdn-icons-png.flaticon.com/512/154/154898.png', lat:-8.05, lng:-34.9},
+    {id:'02', status:'Em Uso', img:'https://cdn-icons-png.flaticon.com/512/154/154898.png', lat:-8.06, lng:-34.91},
+    {id:'03', status:'Em Manutenção', img:'https://cdn-icons-png.flaticon.com/512/154/154898.png', lat:-8.07, lng:-34.92}
   ];
   const problemasLista=['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
 
-  // Cards
   const betoneirasDiv=document.getElementById('betoneiras');
   betoneiras.forEach(b=>{
     const card=document.createElement('div'); card.className='card';
@@ -107,12 +134,14 @@
     betoneirasDiv.appendChild(card);
   });
 
-  // Mapa
   const map=L.map('map').setView([-8.055,-34.91],14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-  betoneiras.forEach(b=>{ L.marker([b.lat,b.lng]).addTo(map).bindPopup(`<b>Betoneira ${b.id}</b><br>Status: ${b.status}`); });
+  betoneiras.forEach(b=>{ 
+    L.marker([b.lat,b.lng], {icon:L.icon({iconUrl:b.img, iconSize:[40,40], iconAnchor:[20,40]})})
+     .addTo(map)
+     .bindPopup(`<b>Betoneira ${b.id}</b><br>Status: ${b.status}`); 
+  });
 
-  // Atualização
   const problemasDiv=document.getElementById('problemas');
   problemasLista.forEach(p=>{
     const card=document.createElement('div'); card.className='card'; card.style.cursor='pointer';
@@ -126,7 +155,6 @@
     showSection('chat');
   }
 
-  // Chat
   const chatBox=document.getElementById('chatBox');
   function enviarMensagem(){
     const msg=document.getElementById('mensagem').value; if(msg.trim()==='') return;
@@ -134,7 +162,17 @@
     document.getElementById('mensagem').value=''; chatBox.scrollTop=chatBox.scrollHeight;
   }
 
-  // Tema
+  const relBody=document.getElementById('relatorioBody');
+  const relatorioFicticio=[
+    {id:'01', uso:10, danos:2, custo:'R$ 120,00'},
+    {id:'02', uso:7, danos:0, custo:'R$ 0,00'},
+    {id:'03', uso:15, danos:3, custo:'R$ 450,00'}
+  ];
+  relatorioFicticio.forEach(r=>{
+    const tr=document.createElement('tr'); tr.innerHTML=`<td>${r.id}</td><td>${r.uso}</td><td>${r.danos}</td><td>${r.custo}</td>`;
+    relBody.appendChild(tr);
+  });
+
   const checkbox=document.getElementById('checkbox');
   checkbox.addEventListener('change',()=>{
     document.body.classList.toggle('dark',checkbox.checked);
