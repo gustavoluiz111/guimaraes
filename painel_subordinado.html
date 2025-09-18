@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Subordinado - Guimarães Equipamentos</title>
+<style>
+body{margin:0;font-family:Arial;background:#f5f5f5;color:#333;transition:all 0.4s;}
+body.dark{background:#1a1a1a;color:#f5f5f5;}
+.menu-btn{position:fixed;top:15px;left:15px;width:35px;height:30px;cursor:pointer;z-index:1001;}
+.menu-btn div{width:100%;height:5px;background:#ffcc00;margin:6px 0;transition:0.4s;}
+.menu-btn.open div:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.menu-btn.open div:nth-child(2){opacity:0;}
+.menu-btn.open div:nth-child(3){transform:rotate(-45deg) translate(6px,-6px);}
+.side-menu{position:fixed;left:-250px;top:0;width:250px;height:100%;background:#333;color:#ffcc00;padding-top:60px;transition:0.4s;z-index:1000;}
+.side-menu a{display:block;color:#ffcc00;padding:15px 20px;text-decoration:none;font-weight:bold;}
+.side-menu a:hover{background:#ffcc00;color:#333;}
+.main{padding:20px;margin-left:0;transition:0.4s;}
+h1{margin-top:0;}
+.card-container{display:flex;flex-wrap:wrap;gap:20px;}
+.card{width:180px;padding:15px;border-radius:10px;background:#fff;text-align:center;box-shadow:0 3px 6px rgba(0,0,0,0.2);transition:0.3s;}
+.card.dark{background:#333;color:#ffcc00;}
+.status{font-weight:bold;padding:5px;border-radius:5px;color:#fff;}
+.disponivel{background:green;}
+.uso{background:orange;}
+.manutencao{background:red;}
+.switch{font-size:17px;position:fixed;top:15px;right:15px;display:inline-block;width:4em;height:2.2em;border-radius:30px;box-shadow:0 0 10px rgba(0,0,0,0.1);}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#2a2a2a;transition:0.4s;border-radius:30px;overflow:hidden;}
+.slider:before{position:absolute;content:"";height:1.2em;width:1.2em;border-radius:20px;left:0.5em;bottom:0.5em;transition:0.4s;box-shadow: inset 8px -4px 0 #fff;}
+.switch input:checked + .slider{background:#00a6ff;}
+.switch input:checked + .slider:before{transform:translateX(1.8em);box-shadow: inset 15px -4px 0px 15px #ffcf48;}
+.card.selecionado{border:2px solid #00a6ff;}
+</style>
+</head>
+<body>
+
+<script>
+// Bloqueio subordinado
+if(sessionStorage.getItem('logado')!=='true' || sessionStorage.getItem('tipo')!=='subordinado'){
+  alert('Acesso negado! Faça login.');
+  window.location.href='login.html';
+}
+</script>
+
+<div class="menu-btn" onclick="toggleMenu(this)"><div></div><div></div><div></div></div>
+<label class="switch"><input id="checkbox" type="checkbox"><span class="slider"></span></label>
+
+<div class="side-menu" id="sideMenu">
+  <a href="#" onclick="showSection('monitoramento')">Monitoramento</a>
+  <a href="#" onclick="showSection('atualizacao')">Atualização</a>
+  <a href="#" onclick="showSection('contratos')">Contratos</a>
+  <a href="#" onclick="logout()">Sair</a>
+</div>
+
+<div class="main" id="mainContent">
+  <div id="monitoramento">
+    <h1>Monitoramento</h1>
+    <div class="card-container" id="betoneiras"></div>
+  </div>
+  <div id="atualizacao" style="display:none;">
+    <h1>Atualização</h1>
+    <div id="problemas" class="card-container"></div>
+    <input type="text" id="outroProblema" placeholder="Outro problema">
+    <input type="file" id="arquivo">
+    <br><button onclick="salvarAtualizacao()">Enviar</button>
+  </div>
+  <div id="contratos" style="display:none;">
+    <h1>Contratos</h1>
+    <textarea style="width:100%;height:120px;">Eu, LOCATÁRIO, declaro que recebi o equipamento em bom estado...</textarea>
+    <br><button onclick="alert('Assinatura registrada!')">Assinar Digitalmente</button>
+  </div>
+</div>
+
+<script>
+const sideMenu = document.getElementById("sideMenu");
+const main = document.getElementById("mainContent");
+let open=false;
+function toggleMenu(el){
+  if(!open){ sideMenu.style.left="0"; main.style.marginLeft="250px"; el.classList.add('open'); open=true; }
+  else { sideMenu.style.left="-250px"; main.style.marginLeft="0"; el.classList.remove('open'); open=false; }
+}
+function showSection(sec){
+  ['monitoramento','atualizacao','contratos'].forEach(s=>document.getElementById(s).style.display='none');
+  document.getElementById(sec).style.display='block';
+}
+function logout(){ sessionStorage.clear(); window.location.href='login.html'; }
+
+const betoneiras=[{id:'01',status:'Disponível'},{id:'02',status:'Em Uso'},{id:'03',status:'Em Manutenção'}];
+const problemasLista=['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
+const betoneirasDiv=document.getElementById('betoneiras');
+betoneiras.forEach(b=>{
+  const card=document.createElement('div'); card.className='card';
+  let statusClass=b.status==='Disponível'?'disponivel':b.status==='Em Uso'?'uso':'manutencao';
+  card.innerHTML=`<h3>Betoneira ${b.id}</h3><div class="status ${statusClass}">${b.status}</div>`;
+  betoneirasDiv.appendChild(card);
+});
+
+const problemasDiv=document.getElementById('problemas');
+problemasLista.forEach(p=>{
+  const card=document.createElement('div'); card.className='card'; card.style.cursor='pointer';
+  card.onclick=()=>card.classList.toggle('selecionado'); card.innerText=p;
+  problemasDiv.appendChild(card);
+});
+function salvarAtualizacao(){
+  const selecionados=[...document.querySelectorAll('#problemas .selecionado')].map(c=>c.innerText);
+  const outro=document.getElementById('outroProblema').value;
+  if(outro.trim()!=='') selecionados.push(outro.trim());
+  const arquivo=document.getElementById('arquivo').files[0]?.name || 'Nenhum arquivo';
+  alert('Problemas: '+(selecionados.length?selecionados.join(', '):'Nenhum')+'\nArquivo: '+arquivo);
+  showSection('contratos');
+}
+
+// Tema
+const checkbox=document.getElementById('checkbox');
+checkbox.addEventListener('change',()=>{ document.body.classList.toggle('dark',checkbox.checked); document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark',checkbox.checked)); });
+</script>
+</body>
+</html>
