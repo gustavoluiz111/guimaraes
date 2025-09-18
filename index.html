@@ -5,96 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Guimarães Equipamentos</title>
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(120deg, #ffd700, #ffcc00);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  .login-container {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    width: 320px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    position: relative;
-  }
-
-  h2 { text-align:center; color:#333; }
-
-  .input-group {
-    margin: 15px 0;
-    position: relative;
-  }
-
-  .input-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .input-group input, select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 2px solid #333;
-    outline: none;
-    font-size: 14px;
-  }
-
-  .input-group input:focus, select:focus {
-    border-color: #ffcc00;
-  }
-
-  .show-pass {
-    position: absolute;
-    top: 38px;
-    right: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #333;
-  }
-
-  .forgot {
-    text-align: right;
-    font-size: 12px;
-    color: #333;
-    cursor: pointer;
-  }
-
-  .forgot:hover { text-decoration: underline; }
-
-  button {
-    width: 100%;
-    padding: 10px;
-    background-color: #ffcc00;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: 0.3s;
-  }
-
-  button:hover { background-color: #ffd700; }
-
-  .profiles {
-    margin-top: 20px;
-    font-size: 12px;
-    color: #333;
-  }
-
-  .profiles span {
-    display: block;
-    margin: 2px 0;
-  }
-
+  body { margin:0; font-family: Arial,sans-serif; background:linear-gradient(120deg,#ffd700,#ffcc00); display:flex; justify-content:center; align-items:center; height:100vh; }
+  .login-container { background:#fff; padding:30px; border-radius:15px; width:320px; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
+  h2{text-align:center;color:#333;}
+  .input-group{margin:15px 0; position:relative;}
+  .input-group label{display:block;margin-bottom:5px;font-weight:bold;color:#333;}
+  .input-group input, select{width:100%; padding:10px; border-radius:8px; border:2px solid #333; outline:none; font-size:14px;}
+  .input-group input:focus, select:focus{border-color:#ffcc00;}
+  .show-pass{position:absolute; top:38px; right:10px; cursor:pointer; font-size:14px; color:#333;}
+  .forgot{text-align:right;font-size:12px;color:#333; cursor:pointer;}
+  .forgot:hover{text-decoration:underline;}
+  button{width:100%;padding:10px;background-color:#ffcc00;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:10px; transition:0.3s;}
+  button:hover{background-color:#ffd700;}
+  .profiles{margin-top:20px;font-size:12px;color:#333;}
+  .profiles span{display:block;margin:2px 0;}
 </style>
 </head>
 <body>
@@ -133,35 +57,36 @@
 </div>
 
 <script>
-  function togglePassword() {
-    const pass = document.getElementById('password');
-    if(pass.type === 'password') pass.type = 'text';
-    else pass.type = 'password';
-  }
+function togglePassword() {
+  const pass = document.getElementById('password');
+  pass.type = (pass.type==='password') ? 'text' : 'password';
+}
 
-  function login() {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    const userType = document.getElementById('userType').value;
+function login() {
+  const email = document.getElementById('email').value;
+  const pass = document.getElementById('password').value;
+  const userType = document.getElementById('userType').value;
 
-    // Perfis de teste
-    const users = {
-      'admin@teste.com': {senha:'1234', tipo:'admin'},
-      'sub@teste.com': {senha:'1234', tipo:'sub'}
-    };
+  const users = {
+    'admin@teste.com': {senha:'1234', tipo:'admin'},
+    'sub@teste.com': {senha:'1234', tipo:'sub'}
+  };
 
-    if(users[email] && users[email].senha === pass){
-      if(users[email].tipo !== userType){
-        alert('Tipo de usuário incorreto!');
-        return;
-      }
-      alert('Login realizado com sucesso! Redirecionando...');
-      if(userType==='admin') window.location.href='painel_admin.html';
-      else window.location.href='painel_sub.html';
-    } else {
-      alert('Email ou senha incorretos!');
+  if(users[email] && users[email].senha === pass){
+    if(users[email].tipo !== userType){
+      alert('Tipo de usuário incorreto!');
+      return;
     }
+    // salvar autenticação no localStorage
+    localStorage.setItem('loggedIn', 'true');
+    localStorage.setItem('userType', userType);
+    alert('Login realizado com sucesso!');
+    if(userType==='admin') window.location.href='painel_admin.html';
+    else window.location.href='painel_sub.html';
+  } else {
+    alert('Email ou senha incorretos!');
   }
+}
 </script>
 
 </body>
