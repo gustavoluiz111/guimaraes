@@ -38,12 +38,9 @@ h1 { margin-top:0; }
 .switch input:checked + .slider:before { transform:translateX(1.8em); box-shadow: inset 15px -4px 0px 15px #ffcf48; }
 
 #map { height:400px; width:100%; margin-top:10px; border-radius:10px; }
-#detalhesBetoneira { margin-top:20px; padding:15px; border-radius:10px; background-color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.2); display:none; }
+#detalhesBetoneira { margin-top:20px; padding:15px; border-radius:10px; background-color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.2); }
 #detalhesBetoneira.dark { background-color:#333; color:#ffcc00; }
 #detalhesBetoneira img { width:100px; }
-#detalhesBetoneira .card-container { margin-top:10px; flex-wrap:wrap; }
-#detalhesBetoneira .card { width:auto; padding:8px; margin:3px; cursor:pointer; }
-#detalhesBetoneira input[type=text], #detalhesBetoneira input[type=file] { margin-top:10px; width:100%; }
 </style>
 </head>
 <body>
@@ -61,18 +58,13 @@ h1 { margin-top:0; }
     <h1>Monitoramento das Betoneiras</h1>
     <div class="card-container" id="betoneiras"></div>
 
-    <div id="detalhesBetoneira">
+    <div id="detalhesBetoneira" style="display:none;">
       <h2 id="nomeBetoneira"></h2>
       <img id="imagemBetoneira" src="" alt="Betoneira">
       <p><b>Status:</b> <span id="statusBetoneira"></span></p>
       <p><b>Cliente:</b> <span id="clienteBetoneira"></span></p>
       <p><b>Localização:</b> <span id="localBetoneira"></span></p>
       <p><b>Custo:</b> <span id="custoBetoneira"></span></p>
-      <div><b>Problemas / Checklist:</b></div>
-      <div id="problemas" class="card-container"></div>
-      <input type="text" id="outroProblema" placeholder="Outro problema...">
-      <input type="file" id="fotoProblema">
-      <button onclick="salvarAtualizacao()">Salvar Inspeção</button>
       <button onclick="abrirMapa()">Ver no Mapa</button>
     </div>
 
@@ -94,19 +86,18 @@ function toggleMenu(btn){
 }
 
 function showSection(sec){
-  ['monitoramento'].forEach(s=>document.getElementById(s).style.display='none');
-  document.getElementById(sec).style.display='block';
+  document.getElementById('monitoramento').style.display='none';
+  if(sec==='monitoramento') document.getElementById('monitoramento').style.display='block';
 }
 
+// Dados fictícios betoneiras
 const betoneiras=[
   {id:'01', status:'Disponível', cliente:'Cliente A', local:'Rua 1', custo:'R$ 100', img:'https://raw.githubusercontent.com/gustavoluiz111/guimaraes/main/Aluguel%20De%20Betoneira%20Empresa%20De%20Loca%C3%A7%C3%A3o%20De%20Equipamentos%20Criativo%20Laranja%20Pr_20250917_232950_0000.png', lat:-8.05, lng:-34.9},
   {id:'02', status:'Em Uso', cliente:'Cliente B', local:'Rua 2', custo:'R$ 200', img:'https://raw.githubusercontent.com/gustavoluiz111/guimaraes/main/Aluguel%20De%20Betoneira%20Empresa%20De%20Loca%C3%A7%C3%A3o%20De%20Equipamentos%20Criativo%20Laranja%20Pr_20250917_232950_0000.png', lat:-8.06, lng:-34.91},
   {id:'03', status:'Em Manutenção', cliente:'Cliente C', local:'Rua 3', custo:'R$ 300', img:'https://raw.githubusercontent.com/gustavoluiz111/guimaraes/main/Aluguel%20De%20Betoneira%20Empresa%20De%20Loca%C3%A7%C3%A3o%20De%20Equipamentos%20Criativo%20Laranja%20Pr_20250917_232950_0000.png', lat:-8.07, lng:-34.92}
 ];
 
-const problemasLista=['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
-
-// Cards de monitoramento
+// Gerar cards
 const betoneirasDiv=document.getElementById('betoneiras');
 betoneiras.forEach(b=>{
   const card=document.createElement('div');
@@ -125,27 +116,7 @@ function mostrarDetalhes(b){
   document.getElementById('localBetoneira').innerText=b.local;
   document.getElementById('custoBetoneira').innerText=b.custo;
   document.getElementById('imagemBetoneira').src=b.img;
-
-  // Preenche checklist
-  const problemasDiv=document.getElementById('problemas');
-  problemasDiv.innerHTML='';
-  problemasLista.forEach(p=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.style.cursor='pointer';
-    card.onclick=()=>card.classList.toggle('selecionado');
-    card.innerText=p;
-    problemasDiv.appendChild(card);
-  });
-
   map.setView([b.lat,b.lng],15);
-}
-
-function salvarAtualizacao(){
-  const selecionados=[...document.querySelectorAll('#problemas .selecionado')].map(c=>c.innerText);
-  const outro=document.getElementById('outroProblema').value;
-  if(outro) selecionados.push(outro);
-  alert('Problemas registrados: '+(selecionados.length?selecionados.join(', '):'Nenhum'));
 }
 
 // Tema
@@ -157,11 +128,11 @@ checkbox.addEventListener('change', ()=>{
 });
 
 // Mapa
-const map = L.map('map').setView([-8.05,-34.9], 13);
+const map = L.map('map').setView([-8.05,-34.9],13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
 betoneiras.forEach(b=>{ L.marker([b.lat,b.lng]).addTo(map).bindPopup(`Betoneira ${b.id} - ${b.cliente}`); });
 function abrirMapa(){ map.invalidateSize(); }
-
 </script>
+
 </body>
 </html>
