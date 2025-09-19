@@ -77,12 +77,11 @@ function login() {
       alert('Tipo de usuário incorreto!');
       return;
     }
-    // Salvar autenticação no localStorage
     localStorage.setItem('loggedIn', 'true');
     localStorage.setItem('userType', userType);
     alert('Login realizado com sucesso!');
-    if(userType==='admin') window.location.href='painel_admin.html';
-    else window.location.href='painel_sub.html';
+    // Redireciona para painel universal
+    window.location.href='painel.html';
   } else {
     alert('Email ou senha incorretos!');
   }
