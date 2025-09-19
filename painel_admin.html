@@ -30,6 +30,10 @@ h1 { margin-top:0; }
 .uso { background-color:orange; }
 .manutencao { background-color:red; }
 
+.checklist { margin-top:10px; display:none; flex-direction:column; gap:5px; }
+.checklist div { padding:5px; border-radius:5px; background-color:#eee; cursor:pointer; transition:0.3s; }
+.checklist div.selecionado { background-color:#ffcc00; color:#333; }
+
 .switch { font-size:17px; position:fixed; top:15px; right:15px; display:inline-block; width:4em; height:2.2em; border-radius:30px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
 .switch input { opacity:0; width:0; height:0; }
 .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#2a2a2a; transition:0.4s; border-radius:30px; overflow:hidden; }
@@ -38,12 +42,9 @@ h1 { margin-top:0; }
 .switch input:checked + .slider:before { transform:translateX(1.8em); box-shadow: inset 15px -4px 0px 15px #ffcf48; }
 
 #map { height:400px; width:100%; margin-top:10px; border-radius:10px; }
-#detalhesBetoneira { margin-top:20px; padding:15px; border-radius:10px; background-color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.2); display:none; }
+#detalhesBetoneira { margin-top:20px; padding:15px; border-radius:10px; background-color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.2); }
 #detalhesBetoneira.dark { background-color:#333; color:#ffcc00; }
 #detalhesBetoneira img { width:100px; }
-#detalhesBetoneira .card-container { margin-top:10px; flex-wrap:wrap; }
-#detalhesBetoneira .card { width:auto; padding:8px; margin:3px; cursor:pointer; }
-#detalhesBetoneira input[type=text], #detalhesBetoneira input[type=file] { margin-top:10px; width:100%; }
 </style>
 </head>
 <body>
@@ -56,30 +57,24 @@ h1 { margin-top:0; }
 </div>
 
 <div class="main" id="mainContent">
-
   <div id="monitoramento">
     <h1>Monitoramento das Betoneiras</h1>
     <div class="card-container" id="betoneiras"></div>
 
-    <div id="detalhesBetoneira">
+    <div id="detalhesBetoneira" style="display:none;">
       <h2 id="nomeBetoneira"></h2>
       <img id="imagemBetoneira" src="" alt="Betoneira">
       <p><b>Status:</b> <span id="statusBetoneira"></span></p>
       <p><b>Cliente:</b> <span id="clienteBetoneira"></span></p>
       <p><b>Localização:</b> <span id="localBetoneira"></span></p>
       <p><b>Custo:</b> <span id="custoBetoneira"></span></p>
-      <div><b>Problemas / Checklist:</b></div>
-      <div id="problemas" class="card-container"></div>
-      <input type="text" id="outroProblema" placeholder="Outro problema...">
-      <input type="file" id="fotoProblema">
-      <button onclick="salvarAtualizacao()">Salvar Inspeção</button>
+      <div class="checklist" id="checklist"></div>
       <button onclick="abrirMapa()">Ver no Mapa</button>
     </div>
 
     <div id="map"></div>
     <p><b>Legenda de rastreamento:</b> GPS, RFID, IoT</p>
   </div>
-
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -94,8 +89,8 @@ function toggleMenu(btn){
 }
 
 function showSection(sec){
-  ['monitoramento'].forEach(s=>document.getElementById(s).style.display='none');
-  document.getElementById(sec).style.display='block';
+  document.getElementById('monitoramento').style.display='none';
+  if(sec==='monitoramento') document.getElementById('monitoramento').style.display='block';
 }
 
 const betoneiras=[
@@ -106,7 +101,6 @@ const betoneiras=[
 
 const problemasLista=['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
 
-// Cards de monitoramento
 const betoneirasDiv=document.getElementById('betoneiras');
 betoneiras.forEach(b=>{
   const card=document.createElement('div');
@@ -126,26 +120,17 @@ function mostrarDetalhes(b){
   document.getElementById('custoBetoneira').innerText=b.custo;
   document.getElementById('imagemBetoneira').src=b.img;
 
-  // Preenche checklist
-  const problemasDiv=document.getElementById('problemas');
-  problemasDiv.innerHTML='';
+  const checklistDiv=document.getElementById('checklist');
+  checklistDiv.innerHTML='';
   problemasLista.forEach(p=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.style.cursor='pointer';
-    card.onclick=()=>card.classList.toggle('selecionado');
-    card.innerText=p;
-    problemasDiv.appendChild(card);
+    const item=document.createElement('div');
+    item.innerText=p;
+    item.onclick=()=>item.classList.toggle('selecionado');
+    checklistDiv.appendChild(item);
   });
+  checklistDiv.style.display='flex';
 
   map.setView([b.lat,b.lng],15);
-}
-
-function salvarAtualizacao(){
-  const selecionados=[...document.querySelectorAll('#problemas .selecionado')].map(c=>c.innerText);
-  const outro=document.getElementById('outroProblema').value;
-  if(outro) selecionados.push(outro);
-  alert('Problemas registrados: '+(selecionados.length?selecionados.join(', '):'Nenhum'));
 }
 
 // Tema
@@ -157,11 +142,11 @@ checkbox.addEventListener('change', ()=>{
 });
 
 // Mapa
-const map = L.map('map').setView([-8.05,-34.9], 13);
+const map = L.map('map').setView([-8.05,-34.9],13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
 betoneiras.forEach(b=>{ L.marker([b.lat,b.lng]).addTo(map).bindPopup(`Betoneira ${b.id} - ${b.cliente}`); });
 function abrirMapa(){ map.invalidateSize(); }
-
 </script>
+
 </body>
 </html>
