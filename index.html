@@ -63,8 +63,8 @@ function togglePassword() {
 }
 
 function login() {
-  const email = document.getElementById('email').value;
-  const pass = document.getElementById('password').value;
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('password').value.trim();
   const userType = document.getElementById('userType').value;
 
   const users = {
@@ -77,7 +77,7 @@ function login() {
       alert('Tipo de usuário incorreto!');
       return;
     }
-    // salvar autenticação no localStorage
+    // Salvar autenticação no localStorage
     localStorage.setItem('loggedIn', 'true');
     localStorage.setItem('userType', userType);
     alert('Login realizado com sucesso!');
