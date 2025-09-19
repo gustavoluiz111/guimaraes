@@ -8,56 +8,38 @@
 <style>
   body { margin:0; font-family:Arial,sans-serif; background:#f5f5f5; color:#333; transition:0.4s;}
   body.dark { background:#1a1a1a; color:#f5f5f5; }
-
   .menu-btn { position:fixed; top:15px; left:15px; width:35px; height:30px; cursor:pointer; z-index:1001;}
   .menu-btn div { width:100%; height:5px; background:#ffcc00; margin:6px 0; transition:0.4s;}
   .menu-btn.open div:nth-child(1){ transform:rotate(45deg) translate(6px,6px);}
   .menu-btn.open div:nth-child(2){ opacity:0;}
   .menu-btn.open div:nth-child(3){ transform:rotate(-45deg) translate(6px,-6px);}
-
   .side-menu { position:fixed; left:-250px; top:0; width:250px; height:100%; background:#333; color:#ffcc00; padding-top:60px; transition:0.4s; z-index:1000;}
   .side-menu a { display:block; color:#ffcc00; padding:15px 20px; text-decoration:none; font-weight:bold;}
   .side-menu a:hover { background:#ffcc00; color:#333;}
-
   .main { padding:20px; transition:0.4s;}
-
   h1 { margin-top:0; }
-
   .card-container { display:flex; flex-wrap:wrap; gap:20px;}
-  .card { width:200px; padding:15px; border-radius:10px; background:#fff; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.2);}
+  .card { width:200px; padding:15px; border-radius:10px; background:#fff; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.2); cursor:pointer;}
   .card.dark { background:#333; color:#ffcc00;}
-
   .status { font-weight:bold; padding:5px; border-radius:5px; color:#fff;}
   .disponivel{background:green;} .uso{background:orange;} .manutencao{background:red;}
-
   img.betoneira { width:150px; margin-top:10px;}
-
   #map { height:400px; width:100%; margin-top:20px; border-radius:10px; }
   .legenda { background:white; padding:10px; border-radius:5px; font-size:14px; margin-top:10px;}
   .legenda ul{margin:0; padding:0; list-style:none;}
-
-  .switch { position:fixed; top:15px; right:15px; display:inline-block; width:4em; height:2.2em;}
-  .switch input{opacity:0;width:0;height:0;}
-  .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#2a2a2a;transition:0.4s;border-radius:30px;}
-  .slider:before{content:"";position:absolute;height:1.2em;width:1.2em;border-radius:20px;left:0.5em;bottom:0.5em;transition:0.4s;box-shadow:inset 8px -4px 0 #fff;}
-  .switch input:checked + .slider{background:#00a6ff;}
-  .switch input:checked + .slider:before{transform:translateX(1.8em);box-shadow:inset 15px -4px 0px 15px #ffcf48;}
 </style>
 </head>
 <body>
 
 <div class="menu-btn" onclick="toggleMenu(this)"><div></div><div></div><div></div></div>
-<label class="switch"><input id="checkbox" type="checkbox"><span class="slider"></span></label>
-
 <div class="side-menu" id="sideMenu">
   <a href="#" onclick="showSection('monitoramento')">Monitoramento</a>
-  <a href="#" onclick="showSection('atualizacao')">Atualização</a>
-  <a href="#" onclick="showSection('chat')">Chat</a>
-  <a href="#" onclick="showSection('contratos')">Contratos</a>
+  <a href="#" onclick="showSection('detalhes')">Detalhes Betoneira</a>
 </div>
 
 <div class="main" id="mainContent">
 
+  <!-- MONITORAMENTO -->
   <div id="monitoramento">
     <h1>Monitoramento das Betoneiras</h1>
     <div class="card-container" id="betoneiras"></div>
@@ -72,23 +54,11 @@
     </div>
   </div>
 
-  <div id="atualizacao" style="display:none;">
-    <h1>Atualização de Estado</h1>
-    <div id="problemas" class="card-container"></div>
-    <button onclick="salvarAtualizacao()">Salvar Inspeção</button>
-  </div>
-
-  <div id="chat" style="display:none;">
-    <h1>Chat Equipe</h1>
-    <div id="chatBox" style="border:1px solid #ccc; height:200px; overflow-y:auto; padding:10px; background:#fff;"></div>
-    <input type="text" id="mensagem" style="width:80%;" placeholder="Digite...">
-    <button onclick="enviarMensagem()">Enviar</button>
-  </div>
-
-  <div id="contratos" style="display:none;">
-    <h1>Confirmação de Recebimento</h1>
-    <textarea style="width:100%;height:100px;">Confirmo que recebi o equipamento em bom estado.</textarea><br>
-    <button onclick="alert('Confirmação registrada!')">Confirmar</button>
+  <!-- DETALHES -->
+  <div id="detalhes" style="display:none;">
+    <h1>Detalhes da Betoneira</h1>
+    <div id="detalhesConteudo"></div>
+    <div id="detalheMapa" style="height:300px; margin-top:15px;"></div>
   </div>
 
 </div>
@@ -97,32 +67,51 @@
 <script>
 const sideMenu=document.getElementById("sideMenu");const main=document.getElementById("mainContent");
 function toggleMenu(btn){btn.classList.toggle("open");sideMenu.style.left=sideMenu.style.left==="0px"? "-250px":"0";main.style.marginLeft=sideMenu.style.left==="0px"? "250px":"0";}
-function showSection(sec){['monitoramento','atualizacao','chat','contratos'].forEach(s=>document.getElementById(s).style.display='none');document.getElementById(sec).style.display='block';}
+function showSection(sec){['monitoramento','detalhes'].forEach(s=>document.getElementById(s).style.display='none');document.getElementById(sec).style.display='block';}
 
-const betoneirasData=[{id:'01',status:'Disponível',coords:[-8.05,-34.9]},{id:'02',status:'Em Uso',coords:[-8.1,-34.88]},{id:'03',status:'Em Manutenção',coords:[-8.07,-34.92]}];
+// Dados fictícios
+const betoneirasData=[
+  {id:'01',tipo:'Betoneira 400L',status:'Disponível',coords:[-8.05,-34.9],custo:'R$ 1200',cliente:'Construtora Alpha'},
+  {id:'02',tipo:'Betoneira 250L',status:'Em Uso',coords:[-8.1,-34.88],custo:'R$ 800',cliente:'Obra Beta'},
+  {id:'03',tipo:'Betoneira 600L',status:'Em Manutenção',coords:[-8.07,-34.92],custo:'R$ 450',cliente:'Engenharia Gama'}
+];
 const imgUrl="https://raw.githubusercontent.com/gustavoluiz111/guimaraes/main/Aluguel%20De%20Betoneira%20Empresa%20De%20Loca%C3%A7%C3%A3o%20De%20Equipamentos%20Criativo%20Laranja%20Pr_20250917_232950_0000.png";
 
+// Montar cards
 const betoneirasDiv=document.getElementById('betoneiras');
 betoneirasData.forEach(b=>{
   const card=document.createElement('div');card.className='card';
   const statusClass=b.status==='Disponível'?'disponivel':b.status==='Em Uso'?'uso':'manutencao';
-  card.innerHTML=`<h3>Betoneira ${b.id}</h3><img class="betoneira" src="${imgUrl}"><div class="status ${statusClass}">${b.status}</div>`;
+  card.innerHTML=`<h3>${b.tipo}</h3><img class="betoneira" src="${imgUrl}"><div class="status ${statusClass}">${b.status}</div>`;
+  card.onclick=()=>abrirDetalhes(b);
   betoneirasDiv.appendChild(card);
 });
 
+// Mapa principal
 const map=L.map('map').setView([-8.05,-34.9],13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-betoneirasData.forEach(b=>{L.marker(b.coords).addTo(map).bindPopup(`<b>Betoneira ${b.id}</b><br>Status: ${b.status}`);});
+betoneirasData.forEach(b=>{L.marker(b.coords).addTo(map).bindPopup(`<b>${b.tipo}</b><br>Status: ${b.status}`);});
 
-const problemasLista=['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
-const problemasDiv=document.getElementById('problemas');
-problemasLista.forEach(p=>{const card=document.createElement('div');card.className='card';card.style.cursor='pointer';card.onclick=()=>card.classList.toggle('selecionado');card.innerHTML=p;problemasDiv.appendChild(card);});
-function salvarAtualizacao(){const selecionados=[...document.querySelectorAll('#problemas .selecionado')].map(c=>c.innerText);alert('Problemas reportados: '+(selecionados.length?selecionados.join(', '):'Nenhum'));}
+// Abrir detalhes
+function abrirDetalhes(b){
+  showSection('detalhes');
+  const conteudo=document.getElementById('detalhesConteudo');
+  conteudo.innerHTML=`
+    <h2>${b.tipo} (ID: ${b.id})</h2>
+    <p><b>Status:</b> ${b.status}</p>
+    <p><b>Cliente:</b> ${b.cliente}</p>
+    <p><b>Custo acumulado:</b> ${b.custo}</p>
+    <p><b>Boletim do rastreador:</b> Última atualização há 15min</p>
+    <button onclick="irParaMapa(${b.coords})">Ver no mapa</button>
+  `;
+  // mapa de detalhe
+  const detalheMapa=L.map('detalheMapa').setView(b.coords,15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detalheMapa);
+  L.marker(b.coords).addTo(detalheMapa).bindPopup(b.tipo).openPopup();
+}
 
-const chatBox=document.getElementById('chatBox');
-function enviarMensagem(){const msg=document.getElementById('mensagem').value;if(msg.trim()==='')return;const p=document.createElement('p');p.innerHTML='<b>Você:</b> '+msg;chatBox.appendChild(p);document.getElementById('mensagem').value='';chatBox.scrollTop=chatBox.scrollHeight;}
-
-document.getElementById('checkbox').addEventListener('change',()=>{document.body.classList.toggle('dark');document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark'));});
+// "Ir para mapa"
+function irParaMapa(coords){showSection('monitoramento');map.setView(coords,16);}
 </script>
 </body>
 </html>
