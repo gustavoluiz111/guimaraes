@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Subordinado - Guimarães Equipamentos</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+body { margin:0; font-family: Arial, sans-serif; background-color:#f5f5f5; color:#333; transition: all 0.4s; }
+body.dark { background-color:#1a1a1a; color:#f5f5f5; }
+
+.menu-btn { position: fixed; top:15px; left:15px; width:35px; height:30px; cursor:pointer; z-index:1001; display:flex; flex-direction:column; justify-content:space-between; }
+.menu-btn div { width:100%; height:5px; background-color:#ffcc00; transition:0.4s; }
+.menu-btn.open div:nth-child(1) { transform: rotate(45deg) translate(6px,6px); }
+.menu-btn.open div:nth-child(2) { opacity:0; }
+.menu-btn.open div:nth-child(3) { transform: rotate(-45deg) translate(6px,-6px); }
+
+.side-menu { position: fixed; left:-250px; top:0; width:250px; height:100%; background-color:#333; color:#ffcc00; padding-top:60px; transition:0.4s; z-index:1000; }
+.side-menu a { display:block; color:#ffcc00; padding:15px 20px; text-decoration:none; font-weight:bold; }
+.side-menu a:hover { background-color:#ffcc00; color:#333; }
+
+.main { padding:20px; margin-left:0; transition:0.4s; }
+h1 { margin-top:0; }
+
+.card-container { display:flex; flex-wrap:wrap; gap:20px; }
+.card { width:180px; padding:15px; border-radius:10px; background-color:#fff; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.2); transition:0.3s; cursor:pointer; }
+.card.dark { background-color:#333; color:#ffcc00; }
+.status { font-weight:bold; padding:5px; border-radius:5px; color:#fff; margin-top:5px; }
+.disponivel { background-color:green; }
+.uso { background-color:orange; }
+.manutencao { background-color:red; }
+
+.switch { font-size:17px; position:fixed; top:15px; right:15px; display:inline-block; width:4em; height:2.2em; border-radius:30px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#2a2a2a; transition:0.4s; border-radius:30px; overflow:hidden; }
+.slider:before { position:absolute; content:""; height:1.2em; width:1.2em; border-radius:20px; left:0.5em; bottom:0.5em; transition:0.4s; box-shadow: inset 8px -4px 0 #fff; }
+.switch input:checked + .slider { background-color:#00a6ff; }
+.switch input:checked + .slider:before { transform:translateX(1.8em); box-shadow: inset 15px -4px 0px 15px #ffcf48; }
+
+#map { height:400px; width:100%; margin-top:10px; border-radius:10px; }
+#detalhesBetoneira { margin-top:20px; padding:15px; border-radius:10px; background-color:#fff; box-shadow:0 3px 6px rgba(0,0,0,0.2); }
+#detalhesBetoneira.dark { background-color:#333; color:#ffcc00; }
+#detalhesBetoneira img { width:100px; margin-bottom:10px; }
+.checklist { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.checklist div { padding:8px 12px; border-radius:8px; background:#eee; cursor:pointer; transition:0.3s; }
+.checklist div.selecionado { background:#ffcc00; color:#333; }
+</style>
+</head>
+<body>
+
+<div class="menu-btn" onclick="toggleMenu(this)"><div></div><div></div><div></div></div>
+<label class="switch"><input id="checkbox" type="checkbox"><span class="slider"></span></label>
+
+<div class="side-menu" id="sideMenu">
+  <a href="#" onclick="showSection('monitoramento')">Monitoramento</a>
+</div>
+
+<div class="main" id="mainContent">
+
+  <div id="monitoramento">
+    <h1>Monitoramento das Betoneiras</h1>
+    <div class="card-container" id="betoneiras"></div>
+
+    <div id="detalhesBetoneira" style="display:none;">
+      <h2 id="nomeBetoneira"></h2>
+      <img id="imagemBetoneira" src="" alt="Betoneira">
+      <p><b>Status:</b> <span id="statusBetoneira"></span></p>
+      <p><b>Cliente:</b> <span id="clienteBetoneira"></span></p>
+      <p><b>Localização:</b> <span id="localBetoneira"></span></p>
+      <p><b>Custo:</b> <span id="custoBetoneira"></span></p>
+      <div class="checklist" id="problemasCheck"></div>
+      <input type="text" id="outroProblema" placeholder="Outro problema..." style="width:100%; margin-top:10px;">
+      <input type="file" id="fotoProblema" style="margin-top:10px;">
+      <button onclick="salvarAtualizacao()">Salvar Inspeção</button>
+      <button onclick="abrirMapa()">Ver no Mapa</button>
+    </div>
+
+    <div id="map"></div>
+    <p><b>Legenda de rastreamento:</b> GPS, RFID, IoT</p>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const sideMenu=document.getElementById("sideMenu");
+const main=document.getElementById("mainContent");
+let open=false;
+function toggleMenu(btn){
+  btn.classList.toggle('open');
+  if(!open){ sideMenu.style.left="0"; main.style.marginLeft="250px"; open=true; } 
+  else { sideMenu.style.left="-250px"; main.style.marginLeft="0"; open=false; }
+}
+
+function showSection(sec){
+  ['monitoramento'].forEach(s=>document.getElementById(s).style.display='none');
+  document.getElementById(sec).style.display='block';
+}
+
+const betoneiras=[
+  {id:'01', status:'Disponível', cliente:'Cliente A', local:'Rua 1', custo:'R$ 100', img:'https://raw.githubusercontent.com/gustavoluiz111/guimaraes/main/Aluguel%20De%20Betoneira%20Empresa%20De%20Loca%C3%A7%C3%A3o%20De%20Equipamentos%20Criativo%20Laranja%20Pr_20250917_232950_0000.png', lat:-8.05, lng:-34.9},
+  {id:'02', status:'Em Uso', cliente:'Cliente B', local:'Rua 2', custo:'R$ 200', img:'https://raw.githubusercontent.com/gustavoluiz111/guimaraes/main/Aluguel%20De%20Betoneira%20Empresa%20De%20Loca%C3%A7%C3%A3o%20De%20Equipamentos%20Criativo%20Laranja%20Pr_20250917_232950_0000.png', lat:-8.06, lng:-34.91},
+  {id:'03', status:'Em Manutenção', cliente:'Cliente C', local:'Rua 3', custo:'R$ 300', img:'https://raw.githubusercontent.com/gustavoluiz111/guimaraes/main/Aluguel%20De%20Betoneira%20Empresa%20De%20Loca%C3%A7%C3%A3o%20De%20Equipamentos%20Criativo%20Laranja%20Pr_20250917_232950_0000.png', lat:-8.07, lng:-34.92}
+];
+
+const problemasLista=['Pneu furado','Trinca no tambor','Motor falhando','Fiação solta'];
+
+// Cards de monitoramento
+const betoneirasDiv=document.getElementById('betoneiras');
+betoneiras.forEach(b=>{
+  const card=document.createElement('div');
+  card.className='card';
+  let statusClass=b.status==='Disponível'?'disponivel':b.status==='Em Uso'?'uso':'manutencao';
+  card.innerHTML=`<h3>Betoneira ${b.id}</h3><div class="status ${statusClass}">${b.status}</div>`;
+  card.onclick=()=>mostrarDetalhes(b);
+  betoneirasDiv.appendChild(card);
+});
+
+function mostrarDetalhes(b){
+  document.getElementById('detalhesBetoneira').style.display='block';
+  document.getElementById('nomeBetoneira').innerText='Betoneira '+b.id;
+  document.getElementById('statusBetoneira').innerText=b.status;
+  document.getElementById('clienteBetoneira').innerText=b.cliente;
+  document.getElementById('localBetoneira').innerText=b.local;
+  document.getElementById('custoBetoneira').innerText=b.custo;
+  document.getElementById('imagemBetoneira').src=b.img;
+
+  const checklistDiv=document.getElementById('problemasCheck');
+  checklistDiv.innerHTML='';
+  problemasLista.forEach(p=>{
+    const item=document.createElement('div');
+    item.innerText=p;
+    item.onclick=()=>item.classList.toggle('selecionado');
+    checklistDiv.appendChild(item);
+  });
+
+  map.setView([b.lat,b.lng],15);
+}
+
+function salvarAtualizacao(){
+  const selecionados=[...document.querySelectorAll('#problemasCheck .selecionado')].map(c=>c.innerText);
+  const outro=document.getElementById('outroProblema').value;
+  if(outro) selecionados.push(outro);
+  alert('Problemas registrados: '+(selecionados.length?selecionados.join(', '):'Nenhum'));
+}
+
+// Tema
+const checkbox=document.getElementById('checkbox');
+checkbox.addEventListener('change', ()=>{
+  document.body.classList.toggle('dark', checkbox.checked);
+  document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark', checkbox.checked));
+  document.getElementById('detalhesBetoneira').classList.toggle('dark', checkbox.checked);
+});
+
+// Mapa
+const map = L.map('map').setView([-8.05,-34.9], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
+betoneiras.forEach(b=>{ L.marker([b.lat,b.lng]).addTo(map).bindPopup(`Betoneira ${b.id} - ${b.cliente}`); });
+function abrirMapa(){ map.invalidateSize(); }
+
+</script>
+</body>
+</html>
